@@ -1,674 +1,565 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>工作上班休假紀錄</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700&display=swap');
-        body {
-            font-family: 'Noto Sans TC', sans-serif;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>工作上班休假紀錄（改版）</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700&display=swap');
+    body { font-family: 'Noto Sans TC', system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial, 'Noto Sans TC', 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol'; }
+    /* 更緊湊的表格字距 */
+    table td, table th { line-height: 1.2; }
+  </style>
 </head>
-<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
-    <div class="container mx-auto px-4 py-8 max-w-7xl">
-        <!-- 標題 -->
-        <div class="text-center mb-8">
-            <h1 class="text-3xl font-bold text-gray-800 mb-2">工作上班休假紀錄</h1>
-            <p class="text-gray-600">管理您的工作休假與國定假日</p>
-        </div>
+<body class="bg-slate-50 min-h-screen">
+  <div class="max-w-6xl mx-auto px-3 sm:px-4 lg:px-6 py-5">
+    <!-- 標題 -->
+    <header class="text-center mb-5">
+      <h1 class="text-2xl font-bold text-slate-800">工作上班休假紀錄</h1>
+      <p class="text-slate-500 text-sm">左右雙欄、批次匯入國定假日、排除六日與假日計算、0.5 小時為最小單位</p>
+    </header>
 
-        <!-- 單欄緊湊佈局 -->
-        <div class="max-w-6xl mx-auto space-y-4">
-                <!-- 員工基本資訊 -->
-                <div class="bg-white rounded-lg shadow-lg p-4">
-                    <h2 class="text-lg font-semibold text-gray-800 mb-3 flex items-center">
-                        <span class="bg-blue-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs mr-2">1</span>
-                        員工基本資訊
-                    </h2>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                        <div>
-                            <label class="block text-xs font-medium text-gray-700 mb-1">姓名</label>
-                            <input type="text" id="employeeName" class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500" placeholder="請輸入姓名">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-medium text-gray-700 mb-1">年度起始日期</label>
-                            <input type="date" id="startDate" class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-medium text-gray-700 mb-1">年度結束日期</label>
-                            <input type="date" id="endDate" class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 bg-gray-50" readonly>
-                        </div>
-                    </div>
-                </div>
+    <!-- 主要版面：左摘要 / 右清單與表單 -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <!-- 左欄（較窄） -->
+      <aside class="lg:col-span-1 space-y-4">
+        <!-- 員工基本資訊 -->
+        <section class="bg-white rounded-lg shadow p-3">
+          <h2 class="text-base font-semibold text-slate-800 mb-2 flex items-center"><span class="w-5 h-5 text-xs bg-blue-600 text-white rounded-full flex items-center justify-center mr-2">1</span>員工基本資訊</h2>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <label class="text-xs text-slate-600">
+              姓名
+              <input id="employeeName" type="text" class="mt-1 w-full px-2 py-1 text-sm border rounded focus:outline-none focus:ring-1 focus:ring-blue-500" placeholder="請輸入姓名" />
+            </label>
+            <label class="text-xs text-slate-600">
+              年度起始日期
+              <input id="startDate" type="date" class="mt-1 w-full px-2 py-1 text-sm border rounded focus:outline-none focus:ring-1 focus:ring-blue-500" />
+            </label>
+            <label class="text-xs text-slate-600">
+              年度結束日期
+              <input id="endDate" type="date" class="mt-1 w-full px-2 py-1 text-sm border rounded bg-slate-50 text-slate-500" readonly />
+            </label>
+          </div>
+        </section>
 
-                <!-- 特休統計 -->
-                <div class="bg-white rounded-lg shadow-lg p-4">
-                    <h2 class="text-lg font-semibold text-gray-800 mb-3 flex items-center">
-                        <span class="bg-green-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs mr-2">📊</span>
-                        特休統計
-                    </h2>
-                    <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
-                        <div class="bg-blue-50 rounded-lg p-3 text-center">
-                            <div class="text-xl font-bold text-blue-600">10</div>
-                            <div class="text-xs text-gray-600">年度總天數</div>
-                        </div>
-                        <div class="bg-green-50 rounded-lg p-3 text-center">
-                            <div class="text-xl font-bold text-green-600">80</div>
-                            <div class="text-xs text-gray-600">年度總小時</div>
-                        </div>
-                        <div class="bg-orange-50 rounded-lg p-3 text-center">
-                            <div class="text-xl font-bold text-orange-600" id="usedDays">0</div>
-                            <div class="text-xs text-gray-600">已使用天數</div>
-                        </div>
-                        <div class="bg-purple-50 rounded-lg p-3 text-center">
-                            <div class="text-xl font-bold text-purple-600" id="remainingDays">10</div>
-                            <div class="text-xs text-gray-600">剩餘天數</div>
-                        </div>
-                        <div class="bg-indigo-50 rounded-lg p-3 text-center">
-                            <div class="text-xl font-bold text-indigo-600" id="remainingHours">80</div>
-                            <div class="text-xs text-gray-600">剩餘小時</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 工作日倒數計算 -->
-                <div class="bg-white rounded-lg shadow-lg p-4">
-                    <h2 class="text-lg font-semibold text-gray-800 mb-3 flex items-center">
-                        <span class="bg-yellow-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs mr-2">📅</span>
-                        工作日倒數計算
-                    </h2>
-                    <div class="space-y-3">
-                        <div class="bg-yellow-50 rounded-lg p-3 text-center">
-                            <div class="text-xl font-bold text-yellow-600" id="workingDaysCount">計算中...</div>
-                            <div class="text-xs text-gray-600">距離春節假期2026/2/14(週六)剩餘工作日</div>
-                        </div>
-                        <div class="max-h-48 overflow-y-auto">
-                            <div id="holidayList">
-                                <!-- 國定假日和特休列表將在這裡顯示 -->
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 特休紀錄列表 -->
-                <div class="bg-white rounded-lg shadow-lg p-4">
-                    <h2 class="text-lg font-semibold text-gray-800 mb-3 flex items-center">
-                        <span class="bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs mr-2">📋</span>
-                        特休紀錄
-                    </h2>
-                    <div class="overflow-x-auto">
-                        <table class="w-full table-auto">
-                            <thead>
-                                <tr class="bg-gray-50">
-                                    <th class="px-2 py-2 text-left text-xs font-medium text-gray-700">申請日期</th>
-                                    <th class="px-2 py-2 text-left text-xs font-medium text-gray-700">休假期間</th>
-                                    <th class="px-2 py-2 text-left text-xs font-medium text-gray-700">天數</th>
-                                    <th class="px-2 py-2 text-left text-xs font-medium text-gray-700">小時數</th>
-                                    <th class="px-2 py-2 text-left text-xs font-medium text-gray-700">事由</th>
-                                    <th class="px-2 py-2 text-left text-xs font-medium text-gray-700">備註</th>
-                                    <th class="px-2 py-2 text-left text-xs font-medium text-gray-700">操作</th>
-                                </tr>
-                            </thead>
-                            <tbody id="leaveRecords" class="divide-y divide-gray-200">
-                                <tr>
-                                    <td colspan="7" class="px-2 py-4 text-center text-gray-500 text-sm">
-                                        尚無特休紀錄，請新增第一筆申請
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            <!-- 新增特休申請 -->
-            <div class="bg-white rounded-lg shadow-lg p-4">
-                <h2 class="text-lg font-semibold text-gray-800 mb-3 flex items-center">
-                    <span class="bg-indigo-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs mr-2" id="formIcon">+</span>
-                    <span id="formTitle">新增特休申請</span>
-                </h2>
-                <form id="leaveForm" class="space-y-3">
-                    <!-- 第1列：申請日期/事由/備註 -->
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                        <div>
-                            <label class="block text-xs font-medium text-gray-700 mb-1">申請日期</label>
-                            <input type="date" id="applicationDate" class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500" required>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-medium text-gray-700 mb-1">事由</label>
-                            <input type="text" id="reason" class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500" placeholder="請輸入休假事由" required>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-medium text-gray-700 mb-1">備註</label>
-                            <input type="text" id="notes" class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500" placeholder="其他備註事項（選填）">
-                        </div>
-                    </div>
-                    
-                    <!-- 第2列：開始日期/開始時間/結束日期/結束時間 -->
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                        <div>
-                            <label class="block text-xs font-medium text-gray-700 mb-1">開始日期</label>
-                            <input type="date" id="leaveStartDate" class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500" required>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-medium text-gray-700 mb-1">開始時間</label>
-                            <input type="time" id="leaveStartTime" class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500" value="09:00" required>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-medium text-gray-700 mb-1">結束日期</label>
-                            <input type="date" id="leaveEndDate" class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500" required>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-medium text-gray-700 mb-1">結束時間</label>
-                            <input type="time" id="leaveEndTime" class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500" value="18:00" required>
-                        </div>
-                    </div>
-
-                    <div class="flex space-x-2">
-                        <button type="submit" class="flex-1 bg-indigo-600 text-white py-2 px-3 text-sm rounded hover:bg-indigo-700 transition duration-200 font-medium" id="submitBtn">
-                            新增特休申請
-                        </button>
-                        <button type="button" onclick="cancelEdit()" class="flex-1 border border-gray-300 text-gray-700 py-2 px-3 text-sm rounded hover:bg-gray-50 transition duration-200 font-medium" id="cancelBtn" style="display: none;">
-                            取消
-                        </button>
-                    </div>
-                </form>
+        <!-- 特休統計 -->
+        <section class="bg-white rounded-lg shadow p-3">
+          <h2 class="text-base font-semibold text-slate-800 mb-2 flex items-center"><span class="w-5 h-5 text-xs bg-emerald-600 text-white rounded-full flex items-center justify-center mr-2">📊</span>特休統計</h2>
+          <div class="grid grid-cols-2 md:grid-cols-5 gap-2">
+            <div class="bg-blue-50 rounded p-2 text-center">
+              <div class="text-lg font-bold text-blue-700" id="totalDays">10</div>
+              <div class="text-[11px] text-slate-600">年度總天數</div>
             </div>
-
-            <!-- 新增國定假日 -->
-            <div class="bg-white rounded-lg shadow-lg p-4">
-                <h2 class="text-lg font-semibold text-gray-800 mb-3 flex items-center">
-                    <span class="bg-purple-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs mr-2">🎉</span>
-                    新增國定假日
-                </h2>
-                <form id="holidayForm">
-                    <!-- 名稱/日期 並排 -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
-                        <div>
-                            <label class="block text-xs font-medium text-gray-700 mb-1">假日名稱</label>
-                            <input type="text" id="holidayName" class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-purple-500" placeholder="例：春節" required>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-medium text-gray-700 mb-1">假日日期</label>
-                            <input type="date" id="holidayDate" class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-purple-500" required>
-                        </div>
-                    </div>
-                    <button type="submit" class="w-full bg-purple-600 text-white py-2 px-3 text-sm rounded hover:bg-purple-700 transition duration-200 font-medium">
-                        新增國定假日
-                    </button>
-                </form>
+            <div class="bg-emerald-50 rounded p-2 text-center">
+              <div class="text-lg font-bold text-emerald-700" id="totalHours">80</div>
+              <div class="text-[11px] text-slate-600">年度總小時</div>
             </div>
-        </div>
-    </div>
+            <div class="bg-orange-50 rounded p-2 text-center">
+              <div class="text-lg font-bold text-orange-700" id="usedDays">0.00</div>
+              <div class="text-[11px] text-slate-600">已使用天數</div>
+            </div>
+            <div class="bg-violet-50 rounded p-2 text-center">
+              <div class="text-lg font-bold text-violet-700" id="remainingDays">10.00</div>
+              <div class="text-[11px] text-slate-600">剩餘天數</div>
+            </div>
+            <div class="bg-indigo-50 rounded p-2 text-center">
+              <div class="text-lg font-bold text-indigo-700" id="remainingHours">80</div>
+              <div class="text-[11px] text-slate-600">剩餘小時</div>
+            </div>
+          </div>
+        </section>
 
-    <script>
-        let leaveRecords = JSON.parse(localStorage.getItem('leaveRecords')) || [];
-        let holidays = JSON.parse(localStorage.getItem('holidays')) || [];
-        let recordIdCounter = Math.max(...leaveRecords.map(r => r.id), 0) + 1;
-        let holidayIdCounter = Math.max(...holidays.map(h => h.id), 0) + 1;
-        let editingRecordId = null;
+        <!-- 工作日倒數（不計六日與國定假日） -->
+        <section class="bg-white rounded-lg shadow p-3">
+          <h2 class="text-base font-semibold text-slate-800 mb-2 flex items-center"><span class="w-5 h-5 text-xs bg-amber-500 text-white rounded-full flex items-center justify-center mr-2">📅</span>工作日倒數</h2>
+          <div class="grid grid-cols-2 gap-2 items-end mb-2">
+            <label class="text-xs text-slate-600">
+              目標日期
+              <input id="targetDate" type="date" class="mt-1 w-full px-2 py-1 text-sm border rounded focus:outline-none focus:ring-1 focus:ring-amber-500" />
+            </label>
+            <button id="recalcCountdown" class="h-9 mt-6 bg-amber-600 hover:bg-amber-700 text-white text-sm rounded">重新計算</button>
+          </div>
+          <div class="bg-amber-50 rounded p-2 text-center">
+            <div class="text-lg font-bold text-amber-700" id="workingDaysCount">—</div>
+            <div class="text-[12px] text-slate-600" id="countdownLabel">距離目標日剩餘工作日（不含六日與國定假日）</div>
+          </div>
 
-        // 計算年度結束日期（起始日期+1年-1天）
-        function calculateEndDate(startDateValue) {
-            if (!startDateValue) return '';
-            
-            const startDate = new Date(startDateValue);
-            const endDate = new Date(startDate);
-            endDate.setFullYear(startDate.getFullYear() + 1);
-            endDate.setDate(endDate.getDate() - 1);
-            
-            return endDate.toISOString().split('T')[0];
-        }
+          <div class="mt-3">
+            <details class="rounded border border-slate-200 bg-slate-50 p-2">
+              <summary class="cursor-pointer text-sm text-slate-700">查看國定假日與特休日期</summary>
+              <div class="mt-2 max-h-40 overflow-y-auto" id="holidayList"></div>
+            </details>
+          </div>
+        </section>
 
-        // 設定預設日期
-        document.addEventListener('DOMContentLoaded', function() {
-            const today = new Date();
-            const currentYear = today.getFullYear();
-            
-            // 設定年度起始日期
-            const startDateInput = document.getElementById('startDate');
-            startDateInput.value = `${currentYear}-01-01`;
-            
-            // 自動計算並設定年度結束日期
-            document.getElementById('endDate').value = calculateEndDate(startDateInput.value);
-            
-            // 設定申請日期為今天
-            document.getElementById('applicationDate').value = today.toISOString().split('T')[0];
-            
-            // 監聽起始日期變更
-            startDateInput.addEventListener('change', function() {
-                document.getElementById('endDate').value = calculateEndDate(this.value);
-            });
+        <!-- 國定假日：單筆新增 & 批次匯入 -->
+        <section class="bg-white rounded-lg shadow p-3">
+          <h2 class="text-base font-semibold text-slate-800 mb-2 flex items-center"><span class="w-5 h-5 text-xs bg-fuchsia-600 text-white rounded-full flex items-center justify-center mr-2">🎉</span>國定假日</h2>
 
-            // 監聽休假開始日期變更，自動設定結束日期和時間
-            document.getElementById('leaveStartDate').addEventListener('change', function() {
-                const startDate = this.value;
-                if (startDate) {
-                    document.getElementById('leaveEndDate').value = startDate;
-                    document.getElementById('leaveEndTime').value = '18:00';
-                }
-            });
+          <!-- 單筆新增 -->
+          <form id="holidayForm" class="mb-3">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-2">
+              <label class="text-xs text-slate-600">假日名稱
+                <input id="holidayName" type="text" class="mt-1 w-full px-2 py-1 text-sm border rounded focus:outline-none focus:ring-1 focus:ring-fuchsia-500" placeholder="例：春節" required />
+              </label>
+              <label class="text-xs text-slate-600">假日日期
+                <input id="holidayDate" type="date" class="mt-1 w-full px-2 py-1 text-sm border rounded focus:outline-none focus:ring-1 focus:ring-fuchsia-500" required />
+              </label>
+            </div>
+            <div class="flex gap-2">
+              <button type="submit" class="flex-1 bg-fuchsia-600 hover:bg-fuchsia-700 text-white text-sm rounded py-2">新增國定假日</button>
+              <button type="button" id="clearHolidays" class="flex-1 border text-slate-700 text-sm rounded py-2 hover:bg-slate-50">清除全部</button>
+            </div>
+          </form>
 
-            // 初始化預設的國定假日
-            initializeDefaultHolidays();
-            updateWorkingDaysCalculation();
-        });
+          <!-- 批次匯入 -->
+          <details class="rounded border border-slate-200 bg-slate-50 p-2">
+            <summary class="cursor-pointer text-sm text-slate-700">批次匯入（貼上多筆）</summary>
+            <div class="mt-2 space-y-2">
+              <p class="text-[12px] text-slate-600">每行一筆，支援三種格式：<br>① <code>YYYY-MM-DD,名稱</code>　② <code>YYYY/MM/DD 名稱</code>　③ 從 Excel 貼上兩欄（日期↹名稱）</p>
+              <textarea id="bulkText" rows="5" class="w-full text-sm px-2 py-1 border rounded focus:outline-none focus:ring-1 focus:ring-indigo-500" placeholder="例：\n2025-10-10,國慶日\n2026/02/14 春節假期開始"></textarea>
+              <div class="flex gap-2 items-center">
+                <label class="inline-flex items-center gap-1 text-sm text-slate-700"><input id="bulkOverwrite" type="checkbox" class="rounded" /> 覆蓋現有假日</label>
+                <button id="bulkImport" class="ml-auto bg-indigo-600 hover:bg-indigo-700 text-white text-sm rounded px-3 py-2">匯入</button>
+              </div>
+            </div>
+          </details>
+        </section>
+      </aside>
 
-        // 初始化預設國定假日
-        function initializeDefaultHolidays() {
-            // 如果已有假日資料，就不初始化預設值
-            if (holidays.length > 0) return;
-            
-            const defaultHolidays = [
-                // 2025年國定假日
-                { name: '元旦', date: '2025-01-01' },
-                { name: '春節', date: '2025-01-28' },
-                { name: '春節', date: '2025-01-29' },
-                { name: '春節', date: '2025-01-30' },
-                { name: '春節', date: '2025-01-31' },
-                { name: '春節', date: '2025-02-01' },
-                { name: '和平紀念日', date: '2025-02-28' },
-                { name: '兒童節', date: '2025-04-04' },
-                { name: '清明節', date: '2025-04-05' },
-                { name: '勞動節', date: '2025-05-01' },
-                { name: '端午節', date: '2025-05-31' },
-                { name: '教師節', date: '2025-09-28' },
-                { name: '中秋節', date: '2025-10-06' },
-                { name: '國慶日', date: '2025-10-10' },
-                { name: '光復節', date: '2025-10-24' },
-                { name: '行憲紀念日', date: '2025-12-25' },
-                // 2026年國定假日
-                { name: '元旦', date: '2026-01-01' },
-                { name: '春節', date: '2026-02-14' },
-                { name: '春節', date: '2026-02-15' },
-                { name: '春節', date: '2026-02-16' },
-                { name: '春節', date: '2026-02-17' },
-                { name: '春節', date: '2026-02-18' }
-            ];
-
-            defaultHolidays.forEach(holiday => {
-                holidays.push({
-                    id: holidayIdCounter++,
-                    name: holiday.name,
-                    date: holiday.date
-                });
-            });
-            
-            // 儲存到 localStorage
-            localStorage.setItem('holidays', JSON.stringify(holidays));
-        }
-
-        // 計算休假小時數（精確計算時間差）
-        function calculateLeaveHours(startDate, startTime, endDate, endTime) {
-            const start = new Date(`${startDate}T${startTime}`);
-            const end = new Date(`${endDate}T${endTime}`);
-            
-            // 計算總小時數
-            const timeDiff = end.getTime() - start.getTime();
-            const hours = timeDiff / (1000 * 3600);
-            
-            return Math.max(0, Math.round(hours * 100) / 100); // 保留兩位小數
-        }
-
-        // 計算休假天數（小時數除以8）
-        function calculateLeaveDays(hours) {
-            return Math.round((hours / 8) * 100) / 100; // 保留兩位小數
-        }
-
-        // 計算工作日（排除週末、國定假日、特休）
-        function calculateWorkingDays() {
-            const today = new Date();
-            const springFestival = new Date('2026-02-14'); // 2026年春節日期
-            
-            let workingDays = 0;
-            let currentDate = new Date(today);
-            
-            while (currentDate <= springFestival) {
-                const dateStr = currentDate.toISOString().split('T')[0];
-                const dayOfWeek = currentDate.getDay();
-                
-                // 排除週末
-                if (dayOfWeek !== 0 && dayOfWeek !== 6) {
-                    // 檢查是否為國定假日
-                    const isHoliday = holidays.some(holiday => holiday.date === dateStr);
-                    // 檢查是否為特休日
-                    const isLeaveDay = leaveRecords.some(record => {
-                        const startDate = new Date(record.startDate);
-                        const endDate = new Date(record.endDate);
-                        const checkDate = new Date(dateStr);
-                        return checkDate >= startDate && checkDate <= endDate;
-                    });
-                    
-                    if (!isHoliday && !isLeaveDay) {
-                        workingDays++;
-                    }
-                }
-                
-                currentDate.setDate(currentDate.getDate() + 1);
-            }
-            
-            return workingDays;
-        }
-
-        // 更新工作日計算和假日列表
-        function updateWorkingDaysCalculation() {
-            const workingDays = calculateWorkingDays();
-            document.getElementById('workingDaysCount').textContent = workingDays;
-            
-            // 更新假日列表
-            const holidayList = document.getElementById('holidayList');
-            const allDates = [];
-            
-            // 添加國定假日
-            holidays.forEach(holiday => {
-                allDates.push({
-                    date: holiday.date,
-                    name: holiday.name,
-                    type: 'holiday'
-                });
-            });
-            
-            // 添加特休日
-            leaveRecords.forEach(record => {
-                const startDate = new Date(record.startDate);
-                const endDate = new Date(record.endDate);
-                let currentDate = new Date(startDate);
-                
-                while (currentDate <= endDate) {
-                    allDates.push({
-                        date: currentDate.toISOString().split('T')[0],
-                        name: record.reason,
-                        type: 'leave'
-                    });
-                    currentDate.setDate(currentDate.getDate() + 1);
-                }
-            });
-            
-            // 排序並顯示
-            allDates.sort((a, b) => new Date(a.date) - new Date(b.date));
-            
-            // 分為兩欄顯示
-            const holidayDates = allDates.filter(item => item.type === 'holiday');
-            const leaveDates = allDates.filter(item => item.type === 'leave');
-            
-            function getWeekday(dateStr) {
-                const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
-                const date = new Date(dateStr);
-                return weekdays[date.getDay()];
-            }
-            
-            holidayList.innerHTML = `
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <h4 class="text-sm font-medium text-blue-600 mb-2">國定假日</h4>
-                        <div class="space-y-1">
-                            ${holidayDates.map(item => `
-                                <div class="flex justify-between items-center p-2 rounded bg-blue-50">
-                                    <span class="text-blue-600 font-medium text-sm">${item.name}</span>
-                                    <span class="text-xs text-gray-500">${item.date} (${getWeekday(item.date)})</span>
-                                </div>
-                            `).join('')}
-                            ${holidayDates.length === 0 ? '<div class="text-xs text-gray-400 p-2">無國定假日</div>' : ''}
-                        </div>
-                    </div>
-                    <div>
-                        <h4 class="text-sm font-medium text-red-600 mb-2">特休假期</h4>
-                        <div class="space-y-1">
-                            ${leaveDates.map(item => `
-                                <div class="flex justify-between items-center p-2 rounded bg-red-50">
-                                    <span class="text-red-600 font-medium text-sm">${item.name}</span>
-                                    <span class="text-xs text-gray-500">${item.date} (${getWeekday(item.date)})</span>
-                                </div>
-                            `).join('')}
-                            ${leaveDates.length === 0 ? '<div class="text-xs text-gray-400 p-2">無特休假期</div>' : ''}
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
-
-        // 更新統計資訊
-        function updateStatistics() {
-            const totalUsedDays = leaveRecords.reduce((sum, record) => sum + record.days, 0);
-            const totalUsedHours = leaveRecords.reduce((sum, record) => sum + record.hours, 0);
-            const remainingDays = Math.max(0, 10 - totalUsedDays);
-            const remainingHours = Math.max(0, 80 - totalUsedHours);
-
-            document.getElementById('usedDays').textContent = totalUsedDays.toFixed(2);
-            document.getElementById('remainingDays').textContent = remainingDays.toFixed(2);
-            document.getElementById('remainingHours').textContent = remainingHours.toFixed(0);
-            
-            updateWorkingDaysCalculation();
-        }
-
-        // 渲染紀錄表格
-        function renderRecords() {
-            const tbody = document.getElementById('leaveRecords');
-            
-            if (leaveRecords.length === 0) {
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="7" class="px-4 py-8 text-center text-gray-500">
-                            尚無特休紀錄，請新增第一筆申請
-                        </td>
-                    </tr>
-                `;
-                return;
-            }
-
-            tbody.innerHTML = leaveRecords.map(record => `
-                <tr class="hover:bg-gray-50">
-                    <td class="px-2 py-2 text-xs text-gray-900">${record.applicationDate}</td>
-                    <td class="px-2 py-2 text-xs text-gray-900">
-                        ${record.startDate} ${record.startTime}<br>
-                        <span class="text-gray-500">至</span><br>
-                        ${record.endDate} ${record.endTime}
-                    </td>
-                    <td class="px-2 py-2 text-xs font-medium text-blue-600">${record.days}</td>
-                    <td class="px-2 py-2 text-xs text-gray-900">${record.hours}h</td>
-                    <td class="px-2 py-2 text-xs text-gray-900">${record.reason}</td>
-                    <td class="px-2 py-2 text-xs text-gray-500">${record.notes || '-'}</td>
-                    <td class="px-2 py-2 text-xs">
-                        <button onclick="editRecord(${record.id})" class="text-blue-600 hover:text-blue-800 font-medium mr-2 text-xs">
-                            修改
-                        </button>
-                        <button onclick="deleteRecord(${record.id})" class="text-red-600 hover:text-red-800 font-medium text-xs">
-                            刪除
-                        </button>
-                    </td>
+      <!-- 右欄（較寬） -->
+      <main class="lg:col-span-2 space-y-4">
+        <!-- 特休紀錄列表 -->
+        <section class="bg-white rounded-lg shadow p-3">
+          <h2 class="text-base font-semibold text-slate-800 mb-2 flex items-center"><span class="w-5 h-5 text-xs bg-rose-600 text-white rounded-full flex items-center justify-center mr-2">📋</span>特休紀錄</h2>
+          <div class="overflow-x-auto">
+            <table class="w-full table-auto text-sm">
+              <thead>
+                <tr class="bg-slate-50 text-xs text-slate-700">
+                  <th class="px-2 py-2 text-left">申請日期</th>
+                  <th class="px-2 py-2 text-left">休假期間</th>
+                  <th class="px-2 py-2 text-left">天數</th>
+                  <th class="px-2 py-2 text-left">小時數</th>
+                  <th class="px-2 py-2 text-left">事由</th>
+                  <th class="px-2 py-2 text-left">備註</th>
+                  <th class="px-2 py-2 text-left">操作</th>
                 </tr>
-            `).join('');
+              </thead>
+              <tbody id="leaveRecords" class="divide-y divide-slate-200">
+                <tr><td colspan="7" class="px-2 py-6 text-center text-slate-500 text-sm">尚無特休紀錄，請新增第一筆申請</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- 新增/修改 特休申請 -->
+        <section class="bg-white rounded-lg shadow p-3">
+          <h2 class="text-base font-semibold text-slate-800 mb-2 flex items-center"><span id="formIcon" class="w-5 h-5 text-xs bg-indigo-600 text-white rounded-full flex items-center justify-center mr-2">+</span><span id="formTitle">新增特休申請</span></h2>
+          <form id="leaveForm" class="space-y-2">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+              <label class="text-xs text-slate-600">申請日期
+                <input id="applicationDate" type="date" class="mt-1 w-full px-2 py-1 text-sm border rounded focus:outline-none focus:ring-1 focus:ring-indigo-500" required />
+              </label>
+              <label class="text-xs text-slate-600">事由
+                <input id="reason" type="text" class="mt-1 w-full px-2 py-1 text-sm border rounded focus:outline-none focus:ring-1 focus:ring-indigo-500" placeholder="請輸入休假事由" required />
+              </label>
+              <label class="text-xs text-slate-600">備註
+                <input id="notes" type="text" class="mt-1 w-full px-2 py-1 text-sm border rounded focus:outline-none focus:ring-1 focus:ring-indigo-500" placeholder="其他備註事項（選填）" />
+              </label>
+            </div>
+
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+              <label class="text-xs text-slate-600">開始日期
+                <input id="leaveStartDate" type="date" class="mt-1 w-full px-2 py-1 text-sm border rounded focus:outline-none focus:ring-1 focus:ring-indigo-500" required />
+              </label>
+              <label class="text-xs text-slate-600">開始時間
+                <input id="leaveStartTime" type="time" class="mt-1 w-full px-2 py-1 text-sm border rounded focus:outline-none focus:ring-1 focus:ring-indigo-500" value="09:00" required />
+              </label>
+              <label class="text-xs text-slate-600">結束日期
+                <input id="leaveEndDate" type="date" class="mt-1 w-full px-2 py-1 text-sm border rounded focus:outline-none focus:ring-1 focus:ring-indigo-500" required />
+              </label>
+              <label class="text-xs text-slate-600">結束時間
+                <input id="leaveEndTime" type="time" class="mt-1 w-full px-2 py-1 text-sm border rounded focus:outline-none focus:ring-1 focus:ring-indigo-500" value="18:00" required />
+              </label>
+            </div>
+
+            <div class="flex gap-2">
+              <button id="submitBtn" type="submit" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-2 text-sm rounded">新增特休申請</button>
+              <button id="cancelBtn" type="button" class="flex-1 border text-slate-700 py-2 text-sm rounded hover:bg-slate-50 hidden" onclick="cancelEdit()">取消</button>
+            </div>
+          </form>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    // ====== 設定值（可依需要調整） ======
+    const WORK_START = '09:00';
+    const LUNCH_START = '12:00';
+    const LUNCH_END   = '13:00';
+    const WORK_END   = '18:00'; // 含午休一小時，總工時 8 小時
+    const DAY_HOURS = 8;
+
+    // ====== 狀態 ======
+    let leaveRecords = JSON.parse(localStorage.getItem('leaveRecords') || '[]');
+    let holidays = JSON.parse(localStorage.getItem('holidays') || '[]');
+    let recordIdCounter = (leaveRecords.length ? Math.max(...leaveRecords.map(r => r.id)) : 0) + 1;
+    let holidayIdCounter = (holidays.length ? Math.max(...holidays.map(h => h.id)) : 0) + 1;
+    let editingRecordId = null;
+
+    // ====== 工具函式 ======
+    const zpad = n => (n < 10 ? '0' + n : '' + n);
+    const fmtDate = d => `${d.getFullYear()}-${zpad(d.getMonth()+1)}-${zpad(d.getDate())}`;
+    const parseDate = s => { const [y,m,d] = s.split('-').map(Number); return new Date(y, m-1, d); };
+    const parseDateFlex = s => { // 支援 2025/10/10 或 2025-10-10
+      const t = s.includes('/') ? s.split('/') : s.split('-');
+      const [y,m,d] = t.map(v => parseInt(v,10));
+      return new Date(y, (m||1)-1, d||1);
+    };
+    const parseTimeToMinutes = t => { const [hh, mm] = t.split(':').map(Number); return hh*60 + (mm||0); };
+    const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
+
+    const weekdayName = idx => ['日','一','二','三','四','五','六'][idx];
+
+    function combineDateTime(dateStr, timeStr){
+      const d = parseDate(dateStr);
+      const [hh,mm] = timeStr.split(':').map(Number);
+      d.setHours(hh, mm, 0, 0);
+      return d;
+    }
+
+    function isWeekend(d){ const x = d.getDay(); return x === 0 || x === 6; }
+    function isHolidayDate(dateStr){ return holidays.some(h => h.date === dateStr); }
+    function isWorkingDay(d){ return !isWeekend(d) && !isHolidayDate(fmtDate(d)); }
+
+    // 取得「當天」的工作時段（排午休）：[[startMin,endMin], [startMin,endMin]]
+    function getWorkIntervalsMinutes(){
+      const ws = parseTimeToMinutes(WORK_START);
+      const we = parseTimeToMinutes(WORK_END);
+      const ls = parseTimeToMinutes(LUNCH_START);
+      const le = parseTimeToMinutes(LUNCH_END);
+      return [ [ws, ls], [le, we] ];
+    }
+
+    // 計算兩個 Date 之間的「有效工時」，排除六日與國定假日，且僅計算上班時段（午休不算）
+    function calculateEffectiveWorkHours(startDT, endDT){
+      if(endDT <= startDT) return 0;
+      let hours = 0;
+      const intervals = getWorkIntervalsMinutes();
+
+      // 逐日計算
+      let cur = new Date(startDT.getFullYear(), startDT.getMonth(), startDT.getDate());
+      const endDay = new Date(endDT.getFullYear(), endDT.getMonth(), endDT.getDate());
+
+      while(cur <= endDay){
+        if(isWorkingDay(cur)){
+          for(const [sMin, eMin] of intervals){
+            const blockStart = new Date(cur.getFullYear(), cur.getMonth(), cur.getDate(), Math.floor(sMin/60), sMin%60);
+            const blockEnd   = new Date(cur.getFullYear(), cur.getMonth(), cur.getDate(), Math.floor(eMin/60), eMin%60);
+
+            const ovStart = new Date(Math.max(blockStart.getTime(), startDT.getTime()));
+            const ovEnd   = new Date(Math.min(blockEnd.getTime(), endDT.getTime()));
+            if(ovEnd > ovStart){
+              hours += (ovEnd - ovStart) / (1000*60*60);
+            }
+          }
         }
+        cur.setDate(cur.getDate()+1);
+      }
 
-        // 修改紀錄
-        function editRecord(id) {
-            const record = leaveRecords.find(r => r.id === id);
-            if (!record) return;
+      // 以 0.5 小時為最小單位（四捨五入到 0.5）
+      const rounded = Math.round(hours*2)/2;
+      return rounded;
+    }
 
-            // 填入表單
-            document.getElementById('applicationDate').value = record.applicationDate;
-            document.getElementById('leaveStartDate').value = record.startDate;
-            document.getElementById('leaveStartTime').value = record.startTime;
-            document.getElementById('leaveEndDate').value = record.endDate;
-            document.getElementById('leaveEndTime').value = record.endTime;
-            document.getElementById('reason').value = record.reason;
-            document.getElementById('notes').value = record.notes || '';
+    function calculateLeaveHours(startDate, startTime, endDate, endTime){
+      const start = combineDateTime(startDate, startTime);
+      const end   = combineDateTime(endDate, endTime);
+      return calculateEffectiveWorkHours(start, end);
+    }
 
-            // 更新UI狀態
-            editingRecordId = id;
-            document.getElementById('formTitle').textContent = '修改特休申請';
-            document.getElementById('formIcon').textContent = '✏️';
-            document.getElementById('submitBtn').textContent = '更新特休申請';
-            document.getElementById('cancelBtn').style.display = 'block';
+    function calculateLeaveDays(hours){
+      return Math.round((hours / DAY_HOURS) * 100) / 100; // 兩位小數顯示天數
+    }
 
-            // 滾動到表單
-            document.getElementById('leaveForm').scrollIntoView({ behavior: 'smooth' });
+    // 倒數只排除六日與國定假日（不排個人特休）
+    function calculateWorkingDaysTo(target){
+      const today = new Date();
+      const start = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      const end   = parseDate(target);
+      let count = 0;
+      let cur = new Date(start);
+      while(cur <= end){
+        if(isWorkingDay(cur)) count++;
+        cur.setDate(cur.getDate()+1);
+      }
+      return count;
+    }
+
+    function updateWorkingDaysCalculation(){
+      const tgt = document.getElementById('targetDate').value;
+      if(!tgt){
+        document.getElementById('workingDaysCount').textContent = '—';
+        return;
+      }
+      const wd = calculateWorkingDaysTo(tgt);
+      document.getElementById('workingDaysCount').textContent = wd;
+      const d = parseDate(tgt);
+      document.getElementById('countdownLabel').textContent = `距離 ${fmtDate(d)}（週${weekdayName(d.getDay())}）剩餘工作日`;
+
+      // 假日與特休列表（供檢視）：左邊顯國定假日、右邊顯特休（按日期排序）
+      const holidayList = document.getElementById('holidayList');
+      const allH = [...holidays].sort((a,b)=> a.date.localeCompare(b.date));
+      const leaveDays = [];
+      for(const rec of leaveRecords){
+        const s = parseDate(rec.startDate); const e = parseDate(rec.endDate);
+        let cur = new Date(s);
+        while(cur <= e){
+          leaveDays.push({date: fmtDate(cur), name: rec.reason});
+          cur.setDate(cur.getDate()+1);
         }
+      }
+      leaveDays.sort((a,b)=> a.date.localeCompare(b.date));
 
-        // 取消修改
-        function cancelEdit() {
-            editingRecordId = null;
-            document.getElementById('formTitle').textContent = '新增特休申請';
-            document.getElementById('formIcon').textContent = '+';
-            document.getElementById('submitBtn').textContent = '新增特休申請';
-            document.getElementById('cancelBtn').style.display = 'none';
-            
-            // 重置表單
-            document.getElementById('leaveForm').reset();
-            document.getElementById('applicationDate').value = new Date().toISOString().split('T')[0];
-            document.getElementById('leaveStartTime').value = '09:00';
-            document.getElementById('leaveEndTime').value = '18:00';
+      const col = (title, color, arr) => `
+        <div>
+          <h4 class="text-sm font-medium ${color} mb-1">${title}</h4>
+          <div class="space-y-1">
+            ${arr.length ? arr.map(x=>`
+              <div class="flex justify-between items-center p-1.5 rounded bg-slate-50">
+                <span class="text-slate-700 text-sm">${x.name}</span>
+                <span class="text-[11px] text-slate-500">${x.date}（週${weekdayName(parseDate(x.date).getDay())}）</span>
+              </div>`).join('') : '<div class="text-xs text-slate-400 p-1.5">無</div>'}
+          </div>
+        </div>`;
+
+      holidayList.innerHTML = `
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">${
+          col('國定假日','text-blue-600', allH) + col('特休日期','text-rose-600', leaveDays)
+        }</div>`;
+    }
+
+    function updateStatistics(){
+      const totalUsedHours = leaveRecords.reduce((s,r)=> s + r.hours, 0);
+      const totalUsedDays = leaveRecords.reduce((s,r)=> s + r.days, 0);
+      const remainingHours = Math.max(0, 80 - totalUsedHours);
+      const remainingDays  = Math.max(0, 10 - totalUsedDays);
+
+      document.getElementById('usedDays').textContent = totalUsedDays.toFixed(2);
+      document.getElementById('remainingDays').textContent = remainingDays.toFixed(2);
+      document.getElementById('remainingHours').textContent = Math.round(remainingHours).toString();
+
+      updateWorkingDaysCalculation();
+    }
+
+    function renderRecords(){
+      const tbody = document.getElementById('leaveRecords');
+      if(!leaveRecords.length){
+        tbody.innerHTML = '<tr><td colspan="7" class="px-2 py-6 text-center text-slate-500 text-sm">尚無特休紀錄，請新增第一筆申請</td></tr>';
+        return;
+      }
+      tbody.innerHTML = leaveRecords.map(r=>`
+        <tr class="hover:bg-slate-50">
+          <td class="px-2 py-2 text-xs text-slate-900">${r.applicationDate}</td>
+          <td class="px-2 py-2 text-xs text-slate-900">${r.startDate} ${r.startTime} 至 ${r.endDate} ${r.endTime}</td>
+          <td class="px-2 py-2 text-xs font-medium text-blue-700">${r.days.toFixed(2)}</td>
+          <td class="px-2 py-2 text-xs text-slate-900">${r.hours.toFixed(1)}h</td>
+          <td class="px-2 py-2 text-xs text-slate-900">${r.reason}</td>
+          <td class="px-2 py-2 text-xs text-slate-500">${r.notes || '-'}</td>
+          <td class="px-2 py-2 text-xs">
+            <button class="text-indigo-600 hover:text-indigo-800 font-medium mr-2" onclick="editRecord(${r.id})">修改</button>
+            <button class="text-rose-600 hover:text-rose-800 font-medium" onclick="deleteRecord(${r.id})">刪除</button>
+          </td>
+        </tr>`).join('');
+    }
+
+    function editRecord(id){
+      const r = leaveRecords.find(x=>x.id===id);
+      if(!r) return;
+      document.getElementById('applicationDate').value = r.applicationDate;
+      document.getElementById('leaveStartDate').value = r.startDate;
+      document.getElementById('leaveStartTime').value = r.startTime;
+      document.getElementById('leaveEndDate').value = r.endDate;
+      document.getElementById('leaveEndTime').value = r.endTime;
+      document.getElementById('reason').value = r.reason;
+      document.getElementById('notes').value = r.notes || '';
+      editingRecordId = id;
+      document.getElementById('formTitle').textContent = '修改特休申請';
+      document.getElementById('formIcon').textContent = '✏️';
+      document.getElementById('submitBtn').textContent = '更新特休申請';
+      document.getElementById('cancelBtn').classList.remove('hidden');
+      document.getElementById('leaveForm').scrollIntoView({behavior:'smooth'});
+    }
+
+    function cancelEdit(){
+      editingRecordId = null;
+      document.getElementById('formTitle').textContent = '新增特休申請';
+      document.getElementById('formIcon').textContent = '+';
+      document.getElementById('submitBtn').textContent = '新增特休申請';
+      document.getElementById('cancelBtn').classList.add('hidden');
+      document.getElementById('leaveForm').reset();
+      const today = new Date();
+      document.getElementById('applicationDate').value = fmtDate(today);
+      document.getElementById('leaveStartTime').value = WORK_START;
+      document.getElementById('leaveEndTime').value = WORK_END;
+    }
+
+    function deleteRecord(id){
+      if(!confirm('確定要刪除這筆特休紀錄嗎？')) return;
+      leaveRecords = leaveRecords.filter(r=>r.id!==id);
+      localStorage.setItem('leaveRecords', JSON.stringify(leaveRecords));
+      if(editingRecordId === id) cancelEdit();
+      renderRecords();
+      updateStatistics();
+    }
+
+    // ====== 表單事件：特休 ======
+    document.getElementById('leaveForm').addEventListener('submit', function(e){
+      e.preventDefault();
+      const applicationDate = document.getElementById('applicationDate').value;
+      const startDate = document.getElementById('leaveStartDate').value;
+      const startTime = document.getElementById('leaveStartTime').value;
+      const endDate   = document.getElementById('leaveEndDate').value;
+      const endTime   = document.getElementById('leaveEndTime').value;
+      const reason    = document.getElementById('reason').value.trim();
+      const notes     = document.getElementById('notes').value.trim();
+
+      // 檢核：結束必須晚於開始
+      const st = combineDateTime(startDate, startTime);
+      const et = combineDateTime(endDate, endTime);
+      if(et <= st){ alert('結束時間必須晚於開始時間！'); return; }
+
+      // 檢核：時間需在上班時段內（自動夾在可用範圍）
+      const ws = parseTimeToMinutes(WORK_START), we = parseTimeToMinutes(WORK_END);
+      const stM = parseTimeToMinutes(startTime), etM = parseTimeToMinutes(endTime);
+      if(stM < ws || stM > we || etM < ws || etM > we){
+        alert(`上班時段為 ${WORK_START}–${WORK_END}（午休 ${LUNCH_START}–${LUNCH_END} 不計）`);
+        return;
+      }
+
+      const hours = calculateLeaveHours(startDate, startTime, endDate, endTime); // 已 0.5 為最小單位
+      if(hours <= 0){ alert('此區間無可計算的上班時段（六日/國定假日/午休），請調整時間。'); return; }
+      const days = calculateLeaveDays(hours);
+
+      // 檢核：是否超過剩餘特休（修改時排除原紀錄）
+      const usedExcludingEditing = leaveRecords.reduce((s, r)=> s + (editingRecordId && r.id===editingRecordId ? 0 : r.days), 0);
+      if(usedExcludingEditing + days > 10){
+        const remain = Math.max(0, 10 - usedExcludingEditing);
+        alert(`申請天數超過剩餘特休！剩餘天數：${remain.toFixed(2)} 天`);
+        return;
+      }
+
+      if(editingRecordId){
+        const idx = leaveRecords.findIndex(r=>r.id===editingRecordId);
+        if(idx>-1){
+          leaveRecords[idx] = { id: editingRecordId, applicationDate, startDate, startTime, endDate, endTime, hours, days, reason, notes };
         }
+        localStorage.setItem('leaveRecords', JSON.stringify(leaveRecords));
+        alert('特休申請已成功更新！');
+        cancelEdit();
+      }else{
+        const newRecord = { id: recordIdCounter++, applicationDate, startDate, startTime, endDate, endTime, hours, days, reason, notes };
+        leaveRecords.push(newRecord);
+        localStorage.setItem('leaveRecords', JSON.stringify(leaveRecords));
+        document.getElementById('leaveForm').reset();
+        document.getElementById('applicationDate').value = fmtDate(new Date());
+        document.getElementById('leaveStartTime').value = WORK_START;
+        document.getElementById('leaveEndTime').value = WORK_END;
+        alert('特休申請已成功新增！');
+      }
 
-        // 刪除紀錄
-        function deleteRecord(id) {
-            if (confirm('確定要刪除這筆特休紀錄嗎？')) {
-                leaveRecords = leaveRecords.filter(record => record.id !== id);
-                
-                // 儲存到 localStorage
-                localStorage.setItem('leaveRecords', JSON.stringify(leaveRecords));
-                
-                // 如果正在修改這筆紀錄，取消修改狀態
-                if (editingRecordId === id) {
-                    cancelEdit();
-                }
-                
-                renderRecords();
-                updateStatistics();
-            }
+      renderRecords();
+      updateStatistics();
+    });
+
+    // ====== 國定假日：單筆新增 / 清除 ======
+    document.getElementById('holidayForm').addEventListener('submit', function(e){
+      e.preventDefault();
+      const name = document.getElementById('holidayName').value.trim();
+      const date = document.getElementById('holidayDate').value;
+      if(!name) { alert('請輸入假日名稱'); return; }
+      if(holidays.find(h=>h.date===date)){ alert('該日期已存在國定假日！'); return; }
+      holidays.push({ id: holidayIdCounter++, name, date });
+      localStorage.setItem('holidays', JSON.stringify(holidays));
+      (this).reset();
+      updateWorkingDaysCalculation();
+      alert('國定假日已成功新增！');
+    });
+
+    document.getElementById('clearHolidays').addEventListener('click', function(){
+      if(!holidays.length){ alert('目前沒有假日資料。'); return; }
+      if(!confirm('確定清除全部國定假日？')) return;
+      holidays = [];
+      localStorage.setItem('holidays', JSON.stringify(holidays));
+      updateWorkingDaysCalculation();
+    });
+
+    // ====== 國定假日：批次匯入 ======
+    document.getElementById('bulkImport').addEventListener('click', function(ev){
+      ev.preventDefault();
+      const txt = document.getElementById('bulkText').value.trim();
+      const overwrite = document.getElementById('bulkOverwrite').checked;
+      if(!txt){ alert('請貼上內容'); return; }
+      const lines = txt.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
+      const parsed = [];
+      for(const line of lines){
+        // 可能是：YYYY-MM-DD,名稱 | YYYY/MM/DD 名稱 | 日期[TAB]名稱
+        let datePart = '', namePart = '';
+        if(line.includes('\t')){
+          const [d, n] = line.split('\t');
+          datePart = d.trim(); namePart = (n||'').trim();
+        }else if(line.includes(',')){
+          const [d, n] = line.split(',');
+          datePart = d.trim(); namePart = (n||'').trim();
+        }else{
+          const m = line.match(/^(\d{4}[\/-]\d{1,2}[\/-]\d{1,2})\s+(.+)$/);
+          if(m){ datePart = m[1]; namePart = m[2]; }
         }
+        if(!datePart || !namePart) continue;
+        const d = parseDateFlex(datePart);
+        const ds = fmtDate(d);
+        parsed.push({ date: ds, name: namePart });
+      }
+      if(!parsed.length){ alert('未辨識到可用的日期/名稱格式。'); return; }
 
-        // 特休表單提交處理
-        document.getElementById('leaveForm').addEventListener('submit', function(e) {
-            e.preventDefault();
+      if(overwrite){ holidays = []; }
+      const exists = new Set(holidays.map(h=>h.date));
+      for(const p of parsed){ if(!exists.has(p.date)) { holidays.push({ id: holidayIdCounter++, ...p }); exists.add(p.date); } }
+      localStorage.setItem('holidays', JSON.stringify(holidays));
+      updateWorkingDaysCalculation();
+      alert(`已匯入 ${parsed.length} 筆（重複日期自動略過）`);
+    });
 
-            const applicationDate = document.getElementById('applicationDate').value;
-            const startDate = document.getElementById('leaveStartDate').value;
-            const startTime = document.getElementById('leaveStartTime').value;
-            const endDate = document.getElementById('leaveEndDate').value;
-            const endTime = document.getElementById('leaveEndTime').value;
-            const reason = document.getElementById('reason').value;
-            const notes = document.getElementById('notes').value;
+    // ====== 初始化 ======
+    document.addEventListener('DOMContentLoaded', () => {
+      // 年度起訖：起始 = 今年 01-01；結束 = 起始 + 1 年 - 1 天（唯讀）
+      const startDateInput = document.getElementById('startDate');
+      const endDateInput = document.getElementById('endDate');
+      const today = new Date();
+      startDateInput.value = `${today.getFullYear()}-01-01`;
+      const calcEnd = (s) => { if(!s) return ''; const sd = parseDate(s); const ed = new Date(sd); ed.setFullYear(sd.getFullYear()+1); ed.setDate(ed.getDate()-1); return fmtDate(ed); };
+      endDateInput.value = calcEnd(startDateInput.value);
+      startDateInput.addEventListener('change', () => { endDateInput.value = calcEnd(startDateInput.value); });
 
-            // 驗證日期邏輯
-            const start = new Date(`${startDate}T${startTime}`);
-            const end = new Date(`${endDate}T${endTime}`);
-            
-            if (end <= start) {
-                alert('結束時間必須晚於開始時間！');
-                return;
-            }
+      // 申請日期預設今天
+      document.getElementById('applicationDate').value = fmtDate(today);
 
-            const hours = calculateLeaveHours(startDate, startTime, endDate, endTime);
-            const days = calculateLeaveDays(hours);
+      // 更動開始日期時，預設同日 18:00 為結束
+      document.getElementById('leaveStartDate').addEventListener('change', function(){
+        const v = this.value; if(v){ document.getElementById('leaveEndDate').value = v; document.getElementById('leaveEndTime').value = WORK_END; }
+      });
 
-            // 檢查是否超過剩餘特休（修改時要排除原本的紀錄）
-            let totalUsedDays = leaveRecords.reduce((sum, record) => {
-                if (editingRecordId && record.id === editingRecordId) {
-                    return sum; // 修改時排除原本的紀錄
-                }
-                return sum + record.days;
-            }, 0);
-            
-            if (totalUsedDays + days > 10) {
-                alert(`申請天數超過剩餘特休！剩餘天數：${10 - totalUsedDays} 天`);
-                return;
-            }
+      // 倒數目標日預設 2026-02-14（春節）
+      document.getElementById('targetDate').value = '2026-02-14';
+      document.getElementById('recalcCountdown').addEventListener('click', updateWorkingDaysCalculation);
 
-            if (editingRecordId) {
-                // 修改現有紀錄
-                const recordIndex = leaveRecords.findIndex(r => r.id === editingRecordId);
-                if (recordIndex !== -1) {
-                    leaveRecords[recordIndex] = {
-                        id: editingRecordId,
-                        applicationDate,
-                        startDate,
-                        startTime,
-                        endDate,
-                        endTime,
-                        hours: hours,
-                        days: days,
-                        reason,
-                        notes
-                    };
-                }
-                
-                // 儲存到 localStorage
-                localStorage.setItem('leaveRecords', JSON.stringify(leaveRecords));
-                
-                alert('特休申請已成功更新！');
-                cancelEdit(); // 重置表單狀態
-            } else {
-                // 新增紀錄
-                const newRecord = {
-                    id: recordIdCounter++,
-                    applicationDate,
-                    startDate,
-                    startTime,
-                    endDate,
-                    endTime,
-                    hours: hours,
-                    days: days,
-                    reason,
-                    notes
-                };
-
-                leaveRecords.push(newRecord);
-                
-                // 儲存到 localStorage
-                localStorage.setItem('leaveRecords', JSON.stringify(leaveRecords));
-                
-                // 重置表單
-                document.getElementById('leaveForm').reset();
-                document.getElementById('applicationDate').value = new Date().toISOString().split('T')[0];
-                document.getElementById('leaveStartTime').value = '09:00';
-                document.getElementById('leaveEndTime').value = '18:00';
-
-                alert('特休申請已成功新增！');
-            }
-
-            // 更新顯示
-            renderRecords();
-            updateStatistics();
-        });
-
-        // 國定假日表單提交處理
-        document.getElementById('holidayForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-
-            const name = document.getElementById('holidayName').value;
-            const date = document.getElementById('holidayDate').value;
-
-            // 檢查是否已存在相同日期的假日
-            const existingHoliday = holidays.find(h => h.date === date);
-            if (existingHoliday) {
-                alert('該日期已存在國定假日！');
-                return;
-            }
-
-            // 新增國定假日
-            holidays.push({
-                id: holidayIdCounter++,
-                name: name,
-                date: date
-            });
-
-            // 儲存到 localStorage
-            localStorage.setItem('holidays', JSON.stringify(holidays));
-
-            // 重置表單
-            document.getElementById('holidayForm').reset();
-            
-            // 更新顯示
-            updateWorkingDaysCalculation();
-            
-            alert('國定假日已成功新增！');
-        });
-
-        // 初始化
-        renderRecords();
-        updateStatistics();
-    </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'97aec75672d4f1dc',t:'MTc1NzE3MDIyNi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+      // 初次渲染
+      renderRecords();
+      updateStatistics();
+      updateWorkingDaysCalculation();
+    });
+  </script>
+</body>
 </html>
